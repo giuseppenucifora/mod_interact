@@ -33,7 +33,9 @@
 -export([start/2,
 	 init/2,
 	 stop/1,
-	 send_unavailable_notice/4]).
+	 send_unavailable_notice/4,
+     mod_opt_type/1]).
+
 
 -define(PROCNAME, ?MODULE).
 
@@ -74,3 +76,6 @@ send_unavailable_notice(User, Server, _Resource, _Status) ->
 	      ok
     end.
 
+mod_opt_type(auth_token) -> fun(A) -> A end;
+mod_opt_type(post_url) -> fun(A) -> A end;
+mod_opt_type(_) -> [auth_token, post_url].

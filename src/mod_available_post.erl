@@ -33,7 +33,8 @@
 -export([start/2,
 	 init/2,
 	 stop/1,
-	 send_available_notice/4]).
+	 send_available_notice/4,
+     mod_opt_type/1]).
 
 -define(PROCNAME, ?MODULE).
 
@@ -74,3 +75,7 @@ send_available_notice(User, Server, _Resource, _Packet) ->
 				ok
     end.
 
+
+mod_opt_type(auth_token) -> fun(A) -> A end;
+mod_opt_type(post_url) -> fun(A) -> A end;
+mod_opt_type(_) -> [auth_token, post_url].

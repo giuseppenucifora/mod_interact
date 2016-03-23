@@ -33,7 +33,8 @@
 -export([start/2,
 	 init/2,
 	 stop/1,
-	 send_notice/3]).
+	 send_notice/3,
+     mod_opt_type/1]).
 
 -define(PROCNAME, ?MODULE).
 
@@ -120,3 +121,7 @@ old_integer_to_hex(I) when I < 16 ->
 old_integer_to_hex(I) when I >= 16 ->
     N = trunc(I/16),
     old_integer_to_hex(N) ++ old_integer_to_hex(I rem 16).
+
+mod_opt_type(auth_token) -> fun(A) -> A end;
+mod_opt_type(post_url) -> fun(A) -> A end;
+mod_opt_type(_) -> [auth_token, post_url].
