@@ -120,4 +120,3 @@ old_integer_to_hex(I) when I < 16 ->
 old_integer_to_hex(I) when I >= 16 ->
     N = trunc(I/16),
     old_integer_to_hex(N) ++ old_integer_to_hex(I rem 16).
-
