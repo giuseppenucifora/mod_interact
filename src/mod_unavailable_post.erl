@@ -69,7 +69,7 @@ send_unavailable_notice(User, Server, _Resource, _Status) ->
 	      Post = [
 	        "jabber_id=", User, Sep,
 	        "access_token=", Token ],
-	      ?INFO_MSG("Sending post request ~p~n",[Post] ),
+        ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 	      httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)},[],[]),
 	      ok;
 	    true ->
