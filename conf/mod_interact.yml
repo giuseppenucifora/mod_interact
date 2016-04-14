@@ -1,5 +1,13 @@
 modules:
     mod_offline_post:
-        auth_token: "offline_post_auth_token"
+        auth_token: "mod_offline_post_auth_token"
         post_url: "http://localhost:4567/offline_post"
         body_format: "json"
+    mod_available_post:
+            auth_token: "mod_available_post_auth_token"
+            post_url: "http://localhost:4567/offline_post"
+            body_format: "json"
+    mod_unavailable_post:
+            auth_token: "mod_unavailable_post_auth_token"
+            post_url: "http://localhost:4567/offline_post"
+            body_format: "json"
