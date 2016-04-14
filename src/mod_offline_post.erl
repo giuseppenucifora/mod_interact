@@ -51,7 +51,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.2",
+  Version = "0.3",
   ?INFO_MSG("Starting mod_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -76,10 +76,10 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   ?INFO_MSG("Called grab_notice", []),
   case fxml:get_attr_s(<<"type">>, Attrs) of
     <<"chat">> -> %% mod_muc_log already does it
-      ?DEBUG("dropping chat: ~s", [fxml:element_to_binary(Packet)]),
+      ?INFO_MSG("dropping chat: ~s", [fxml:element_to_binary(Packet)]),
       ok;
     <<"error">> -> %% we don't log errors
-      ?DEBUG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
+      ?INFO_MSG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
       ok;
     _ ->
       send_notice(From, To, Packet)
@@ -102,7 +102,7 @@ send_notice(From, To, Packet) ->
     escape(Format, fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata]))},
   case Subject == [] andalso Body == [] of
     true -> %% don't log empty messages
-      ?DEBUG("not logging empty message from ~s", [jlib:jid_to_string(From)]),
+      ?INFO_MSG("not logging empty message from ~s", [jlib:jid_to_string(From)]),
       ok;
     false ->
       PostUrl = Config#config.post_url,
