@@ -33,10 +33,18 @@
 -export([start/2,
   init/2,
   stop/1,
-  send_notice/4,
+  grab_packet/4,
+  grab_notice/3,
+  send_notice/3,
   mod_opt_type/1]).
 
 -define(PROCNAME, ?MODULE).
+
+-define(DEFAULT_HOST, "localhost").
+-define(DEFAULT_FORMAT, json).
+-define(DEFAULT_TOKEN, "").
+
+-record(config, {post_url=?DEFAULT_HOST, auth_token=?DEFAULT_TOKEN,body_format=?DEFAULT_FORMAT}).
 
 -include("ejabberd.hrl").
 -include("jlib.hrl").
@@ -51,50 +59,72 @@ start(Host, Opts) ->
 init(Host, _Opts) ->
   inets:start(),
   ssl:start(),
-  ejabberd_hooks:add(user_send_packet, Host, ?MODULE, send_notice, 10),
+  ejabberd_hooks:add(user_send_packet, Host, ?MODULE, grab_packet, 10),
   ok.
 
 stop(Host) ->
   ?INFO_MSG("Stopping mod_offline_post", []),
-  ejabberd_hooks:delete(user_send_packet, Host, ?MODULE, send_notice, 10),
+  ejabberd_hooks:delete(user_send_packet, Host, ?MODULE, grab_packet, 10),
   ok.
 
-send_notice(Packet, _C2SState, From, To) ->
-  ?INFO_MSG("Called mod_offline_post", []),
-
-  %Type = xml:get_tag_attr_s("type", Packet),
-  ?INFO_MSG("Message Type ~p~n",[Packet]),
+grab_packet(Packet, _C2SState, From, To) ->
+  ?INFO_MSG("Called grab_packet", []),
+  send_notice(Packet,From,To),
   Packet.
 
-  %Body = xml:get_path_s(Packet, [{elem, "body"}, cdata]),
-  %?INFO_MSG("Message Body ~p~n",[Body]),
+grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
+  ?INFO_MSG("Called grab_notice", []),
+  case fxml:get_attr_s(<<"type">>, Attrs) of
+    <<"chat">> -> %% mod_muc_log already does it
+      ?DEBUG("dropping chat: ~s", [fxml:element_to_binary(Packet)]),
+      ok;
+    <<"error">> -> %% we don't log errors
+      ?DEBUG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
+      ok;
+    _ ->
+      write_packet(From, To, Packet)
+  end.
 
-  %Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-  %PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-  %Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) -> iolist_to_binary(S) end, iolist_to_binary("")),
-  %OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
 
-  %if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
-  %  Post = case Format of
-  %           <<"post">> -> Sep = "&",
-  %             ["to=", To#jid.luser, Sep,
-  %               "from=", From#jid.luser, Sep,
-  %               "body=", url_encode(binary_to_list(Body)), Sep,
-  %               "access_token=", Token, Sep,
-  %              "offline_message_count=", integer_to_list(OfflineMessageCount)];
-  %           _ -> Data = [{"to", To#jid.luser},
-  %             {"from", From#jid.luser},
-  %             {"body", Body},
-  %             {"access_token", Token},
-  %             {"offline_message_count", OfflineMessageCount}],
-  %             mochijson2:encode({struct, Data})
-  %         end,
-  %  ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
-  %  httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)},[],[]),
-  %  Packet;
-  %  true -> Packet
-  % end.
+send_notice(From, To, Packet) ->
+  ?INFO_MSG("Called send_notice", []),
+  Config = receive
+             {config, Result} ->
+               Result
+           end,
+  Format = Config#config.body_format,
+  {Subject, Body} = {case fxml:get_subtag(Packet, <<"subject">>) of
+                       false ->
+                         "";
+                       SubjEl ->
+                         escape(Format, fxml:get_tag_cdata(SubjEl))
+                     end,
+    escape(Format, fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata]))},
+  case Subject == [] andalso Body == [] of
+    true -> %% don't log empty messages
+      ?DEBUG("not logging empty message from ~s", [jlib:jid_to_string(From)]),
+      ok;
+    false ->
+      PostUrl = Config#config.post_url,
+      Token = Config#config.auth_token,
+      FromJid = [From#jid.luser, "@", From#jid.lserver],
+      ToJid = [To#jid.luser, "@", To#jid.lserver],
+      Post = case Format of
+               <<"post">> -> Sep = "&",
+                 ["to=", ToJid, Sep,
+                   "from=", FromJid, Sep,
+                   "body=", url_encode(binary_to_list(Body)), Sep,
+                   "access_token=", Token, Sep];
+               _ -> Data = [{"to", ToJid},
+                 {"from", FromJid},
+                 {"body", Body},
+                 {"access_token", Token}],
+                 mochijson2:encode({struct, Data})
+             end,
+      ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
+      httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], [])
+  end.
 
 %% Get number of offline messages for a user
 get_queue_length(LUser, LServer) ->
