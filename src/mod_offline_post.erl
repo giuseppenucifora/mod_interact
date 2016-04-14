@@ -74,7 +74,7 @@ send_notice(Packet, C2SState, From, To) ->
   %?INFO_MSG("From ~s", [From]),
   %?INFO_MSG("To ~s", [To]),
   %?INFO_MSG("Packet ~s", [Packet]),
-  ok.
+  ok;
 
 %%if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
 %%    Post = case Format of
