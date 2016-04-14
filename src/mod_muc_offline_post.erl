@@ -82,32 +82,21 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   end.
 
 
-send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs}) ->
+send_notice(From, To, Packet) ->
   ?INFO_MSG("Called send_notice", []),
-  Config = receive
-             {config, Result} ->
-               Result
-           end,
-  Format = Config#config.body_format,
-  Body = fxml:get_attr_s(<<"body">>, Attrs),
+  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
   ?INFO_MSG("Message Body ~p~n",[Body]),
-  PostUrl = Config#config.post_url,
-  Token = Config#config.auth_token,
+  Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
+  PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
   FromJid = [From#jid.luser, "@", From#jid.lserver],
   ToJid = [To#jid.luser, "@", To#jid.lserver],
 
-  Post = case Format of
-           <<"post">> -> Sep = "&",
-             ["to=", ToJid, Sep,
-               "from=", FromJid, Sep,
-               "body=", url_encode(binary_to_list(Body)), Sep,
-               "access_token=", Token, Sep];
-           _ -> Data = [{"to", ToJid},
-             {"from", FromJid},
-             {"body", Body},
-             {"access_token", Token}],
-             mochijson2:encode({struct, Data})
-         end,
+  Sep = "&",
+  Post = [
+    "to=", ToJid, Sep,
+    "from=", FromJid, Sep,
+    "body=", url_encode(binary_to_list(Body)), Sep,
+    "access_token=", Token],
   ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
   httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []).
