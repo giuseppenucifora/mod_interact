@@ -74,7 +74,7 @@ grab_packet(Packet, _C2SState, From, To) ->
 
 grab_notice(Packet, From, To) ->
   ?INFO_MSG("Called grab_notice", []),
-  Type = xml:get_tag_attr_s("type", Packet),
+  Type = xml:get_path_s(Packet, [{elem, "type"}, cdata]),
   ?INFO_MSG("Message Type ~p~n",[Type]),
   case Type of
     "groupchat" -> %% mod_muc_log already does it
