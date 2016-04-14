@@ -67,7 +67,7 @@ send_notice(From, To, Packet) ->
     Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) -> iolist_to_binary(S) end, iolist_to_binary("")),
     OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
 
-    if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
+    if (Token /= "") ->
         Post = case Format of
                    <<"post">> -> Sep = "&",
                        ["to=", To#jid.luser, Sep,
@@ -92,13 +92,16 @@ send_notice(From, To, Packet) ->
 %% Get number of offline messages for a user
 get_queue_length(LUser, LServer) ->
     get_queue_length(LUser, LServer, gen_mod:db_type(LServer, mod_offline)).
+
 get_queue_length(LUser, LServer, mnesia) ->
     length(mnesia:dirty_read({offline_msg, {LUser, LServer}}));
+
 get_queue_length(LUser, LServer, riak) ->
     case ejabberd_riak:count_by_index(offline_msg, <<"us">>, {LUser, LServer}) of
         {ok, N} -> N;
         _ -> 0
     end;
+
 get_queue_length(LUser, LServer, odbc) ->
     Username = ejabberd_odbc:escape(LUser),
     case catch ejabberd_odbc:sql_query(LServer, [<<"select count(*) from spool  where username='">>, Username, <<"';">>]) of
@@ -142,11 +145,14 @@ integer_to_hex(I) ->
 
 old_integer_to_hex(I) when I < 10 ->
     integer_to_list(I);
+
 old_integer_to_hex(I) when I < 16 ->
     [I-10+$A];
+
 old_integer_to_hex(I) when I >= 16 ->
     N = trunc(I/16),
     old_integer_to_hex(N) ++ old_integer_to_hex(I rem 16).
+
 
 mod_opt_type(auth_token) -> fun(A) -> A end;
 mod_opt_type(post_url) -> fun(A) -> A end;
