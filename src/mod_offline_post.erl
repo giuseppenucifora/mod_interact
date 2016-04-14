@@ -93,18 +93,8 @@ send_notice(From, To, Packet) ->
                Result
            end,
   Format = Config#config.body_format,
-  {Subject, Body} = {case fxml:get_subtag(Packet, <<"subject">>) of
-                       false ->
-                         "";
-                       SubjEl ->
-                         Format, fxml:get_tag_cdata(SubjEl)
-                     end,
-    Format, fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata])},
-  case Subject == [] andalso Body == [] of
-    true -> %% don't log empty messages
-      ?INFO_MSG("not logging empty message from ~s", [jlib:jid_to_string(From)]),
-      ok;
-    false ->
+  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
+
       PostUrl = Config#config.post_url,
       Token = Config#config.auth_token,
       FromJid = [From#jid.luser, "@", From#jid.lserver],
@@ -123,8 +113,8 @@ send_notice(From, To, Packet) ->
              end,
       ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
-      httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], [])
-  end.
+      httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
+  ok.
 
 %% Get number of offline messages for a user
 get_queue_length(LUser, LServer) ->
