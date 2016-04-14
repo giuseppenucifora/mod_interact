@@ -44,7 +44,7 @@
 -define(DEFAULT_FORMAT, json).
 -define(DEFAULT_TOKEN, "").
 
--record(config, {post_url=?DEFAULT_HOST, auth_token=?DEFAULT_TOKEN,body_format=?DEFAULT_FORMAT}).
+-record(config, {post_url = ?DEFAULT_HOST, auth_token = ?DEFAULT_TOKEN, body_format = ?DEFAULT_FORMAT}).
 
 -include("ejabberd.hrl").
 -include("jlib.hrl").
@@ -69,7 +69,7 @@ stop(Host) ->
 
 grab_packet(Packet, _C2SState, From, To) ->
   ?INFO_MSG("Called grab_packet", []),
-  grab_notice(Packet,From,To),
+  grab_notice(Packet, From, To),
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
@@ -97,9 +97,9 @@ send_notice(From, To, Packet) ->
                        false ->
                          "";
                        SubjEl ->
-                         escape(Format, fxml:get_tag_cdata(SubjEl))
+                         Format, fxml:get_tag_cdata(SubjEl)
                      end,
-    escape(Format, fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata]))},
+    Format, fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata])},
   case Subject == [] andalso Body == [] of
     true -> %% don't log empty messages
       ?INFO_MSG("not logging empty message from ~s", [jlib:jid_to_string(From)]),

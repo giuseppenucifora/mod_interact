@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+rm ebin/*.beam
+
 erlc \
 	-o ebin \
 	-I include -I /opt/ejabberd-16.03/lib/ejabberd-16.03/include/ \
@@ -6,3 +10,7 @@ erlc \
 	-pa /opt/ejabberd-16.03/lib/lager-3.0.2/ebin/ \
     -DLAGER -DNO_EXT_LIB \
     src/*erl
+
+cp ebin/*.beam /opt/ejabberd-16.03/lib/ejabberd-16.03/ebin/
+
+chown -R ejabberd:ejabberd /opt/ejabberd-16.03/lib/ejabberd-16.03/ebin/
