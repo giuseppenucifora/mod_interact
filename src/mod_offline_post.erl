@@ -61,7 +61,7 @@ stop(Host) ->
   ok.
 
 send_notice(Packet, C2SState, From, To) ->
-  ?INFO_MSG("mod_offline_post called send_notice", [Packet]),
+  ?INFO_MSG("mod_offline_post called send_notice", []),
   %Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
   %Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
   %Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
