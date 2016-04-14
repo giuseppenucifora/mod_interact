@@ -33,7 +33,7 @@
 -export([start/2,
   init/2,
   stop/1,
-  send_notice/3,
+  send_notice/4,
   mod_opt_type/1]).
 
 -define(PROCNAME, ?MODULE).
@@ -59,7 +59,7 @@ stop(Host) ->
   ejabberd_hooks:delete(user_send_packet, Host, ?MODULE, send_notice, 10),
   ok.
 
-send_notice(From, To, Packet) ->
+send_notice(Packet, _C2SState, From, To) ->
   ?INFO_MSG("Called mod_offline_post", []),
   Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
   Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
@@ -85,8 +85,8 @@ send_notice(From, To, Packet) ->
            end,
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
     httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)},[],[]),
-    ok;
-    true -> ok
+    Packet;
+    true -> Packet
   end.
 
 
