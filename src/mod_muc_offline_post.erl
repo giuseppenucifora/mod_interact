@@ -1,6 +1,6 @@
 %%%----------------------------------------------------------------------
 
-%%% File    : mod_offline_post.erl
+%%% File    : mod_muc_offline_post.erl
 %%% Author  : Adam Duke <adam.v.duke@gmail.com>
 %%% Purpose : Forward offline messages to an arbitrary url
 %%% Created : 12 Feb 2012 by Adam Duke <adam.v.duke@gmail.com>
@@ -52,7 +52,7 @@
 
 start(Host, Opts) ->
   Version = "0.3",
-  ?INFO_MSG("Starting mod_offline_post v.~s", [Version]),
+  ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
 
@@ -63,7 +63,7 @@ init(Host, _Opts) ->
   ok.
 
 stop(Host) ->
-  ?INFO_MSG("Stopping mod_offline_post", []),
+  ?INFO_MSG("Stopping mod_muc_offline_post", []),
   ejabberd_hooks:delete(user_send_packet, Host, ?MODULE, grab_packet, 10),
   ok.
 
