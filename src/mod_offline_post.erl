@@ -61,8 +61,13 @@ stop(Host) ->
 
 send_notice(Packet, _C2SState, From, To) ->
   ?INFO_MSG("Called mod_offline_post", []),
-  Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
-  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
+
+  Type = xml:get_tag_attr_s("type", Packet),
+  ?INFO_MSG("Message Type ~p~n",[Type]),
+
+  Body = xml:get_path_s(Packet, [{elem, "body"}, cdata]),
+  ?INFO_MSG("Message Body ~p~n",[Body]),
+
   Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
   PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
   Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) -> iolist_to_binary(S) end, iolist_to_binary("")),
