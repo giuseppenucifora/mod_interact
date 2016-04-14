@@ -62,37 +62,38 @@ stop(Host) ->
 send_notice(Packet, _C2SState, From, To) ->
   ?INFO_MSG("Called mod_offline_post", []),
 
-  Type = xml:get_tag_attr_s("type", Packet),
-  ?INFO_MSG("Message Type ~p~n",[Type]),
+  %Type = xml:get_tag_attr_s("type", Packet),
+  ?INFO_MSG("Message Type ~p~n",[Packet]),
+  Packet.
 
-  Body = xml:get_path_s(Packet, [{elem, "body"}, cdata]),
-  ?INFO_MSG("Message Body ~p~n",[Body]),
+  %Body = xml:get_path_s(Packet, [{elem, "body"}, cdata]),
+  %?INFO_MSG("Message Body ~p~n",[Body]),
 
-  Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-  PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-  Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) -> iolist_to_binary(S) end, iolist_to_binary("")),
-  OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
+  %Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
+  %PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
+  %Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) -> iolist_to_binary(S) end, iolist_to_binary("")),
+  %OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
 
-  if (Token /= "") ->
-    Post = case Format of
-             <<"post">> -> Sep = "&",
-               ["to=", To#jid.luser, Sep,
-                 "from=", From#jid.luser, Sep,
-                 "body=", url_encode(binary_to_list(Body)), Sep,
-                 "access_token=", Token, Sep,
-                 "offline_message_count=", integer_to_list(OfflineMessageCount)];
-             _ -> Data = [{"to", To#jid.luser},
-               {"from", From#jid.luser},
-               {"body", Body},
-               {"access_token", Token},
-               {"offline_message_count", OfflineMessageCount}],
-               mochijson2:encode({struct, Data})
-           end,
-    ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
-    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)},[],[]),
-    Packet;
-    true -> Packet
-  end.
+  %if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
+  %  Post = case Format of
+  %           <<"post">> -> Sep = "&",
+  %             ["to=", To#jid.luser, Sep,
+  %               "from=", From#jid.luser, Sep,
+  %               "body=", url_encode(binary_to_list(Body)), Sep,
+  %               "access_token=", Token, Sep,
+  %              "offline_message_count=", integer_to_list(OfflineMessageCount)];
+  %           _ -> Data = [{"to", To#jid.luser},
+  %             {"from", From#jid.luser},
+  %             {"body", Body},
+  %             {"access_token", Token},
+  %             {"offline_message_count", OfflineMessageCount}],
+  %             mochijson2:encode({struct, Data})
+  %         end,
+  %  ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
+  %  httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)},[],[]),
+  %  Packet;
+  %  true -> Packet
+  % end.
 
 
 %% Get number of offline messages for a user
