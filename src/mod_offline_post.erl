@@ -43,7 +43,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.1",
+  Version = "0.2",
   ?INFO_MSG("Starting mod_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -61,7 +61,7 @@ stop(Host) ->
   ok.
 
 send_notice(From, To, Packet) ->
-  ?INFO_MSG("mod_offline_post called send_notice", []),
+  ?INFO_MSG("mod_offline_post called send_notice", [Packet]),
   %Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
   %Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
   %Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
@@ -71,9 +71,9 @@ send_notice(From, To, Packet) ->
   %Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) ->
   %  iolist_to_binary(S) end, iolist_to_binary("")),
   %OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
-  ?INFO_MSG("From ~s", [From]),
-  ?INFO_MSG("To ~s", [To]),
-  ?INFO_MSG("Packet ~s", [Packet]),
+  %?INFO_MSG("From ~s", [From]),
+  %?INFO_MSG("To ~s", [To]),
+  %?INFO_MSG("Packet ~s", [Packet]),
   ok.
 
 %%if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
