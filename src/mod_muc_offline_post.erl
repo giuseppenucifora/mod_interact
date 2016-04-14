@@ -40,12 +40,6 @@
 
 -define(PROCNAME, ?MODULE).
 
--define(DEFAULT_HOST, "localhost").
--define(DEFAULT_FORMAT, json).
--define(DEFAULT_TOKEN, "").
-
--record(config, {post_url = ?DEFAULT_HOST, auth_token = ?DEFAULT_TOKEN, body_format = ?DEFAULT_FORMAT}).
-
 -include("ejabberd.hrl").
 -include("jlib.hrl").
 -include("logger.hrl").
@@ -83,7 +77,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
 
 
 send_notice(From, To, Packet) ->
-  ?INFO_MSG("Called send_notice", []),
+  ?INFO_MSG("Called send_notice %s", [Packet]),
   Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
   ?INFO_MSG("Message Body ~p~n",[Body]),
   Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
