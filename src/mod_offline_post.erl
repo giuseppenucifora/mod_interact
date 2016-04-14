@@ -33,7 +33,7 @@
 -export([start/2,
   init/2,
   stop/1,
-  send_notice/3,
+  send_notice/4,
   mod_opt_type/1]).
 
 -define(PROCNAME, ?MODULE).
@@ -43,48 +43,59 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.2.2",
-  ?INFO_MSG("Starting mod_offline_post v.", [Version]),
+  Version = "0.2",
+  ?INFO_MSG("Starting mod_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
 
 init(Host, _Opts) ->
   inets:start(),
   ssl:start(),
-  ?INFO_MSG("start user_send_packet hook", []),
-  ejabberd_hooks:add(user_send_packet, Host, ?MODULE, send_notice, 50),
+  ejabberd_hooks:add(user_send_packet, Host, ?MODULE, send_notice, 10),
   ok.
 
 stop(Host) ->
   ?INFO_MSG("Stopping mod_offline_post", []),
-  ejabberd_hooks:delete(user_send_packet, Host, ?MODULE, send_notice, 50),
+  ejabberd_hooks:delete(user_send_packet, Host,
+    ?MODULE, send_notice, 10),
   ok.
 
-send_notice(From, To, Packet) ->
-  %?INFO_MSG("mod_offline_post called send_notice", [Packet]),
-  Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
-  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
-  Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
-    iolist_to_binary(S) end, list_to_binary("")),
-  PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) ->
-    iolist_to_binary(S) end, list_to_binary("")),
-  Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) ->
-    iolist_to_binary(S) end, iolist_to_binary("")),
+send_notice(Packet, C2SState, From, To) ->
+  ?INFO_MSG("mod_offline_post called send_notice", [Packet]),
+  %Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
+  %Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
+  %Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
+  %  iolist_to_binary(S) end, list_to_binary("")),
+  %PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) ->
+  %  iolist_to_binary(S) end, list_to_binary("")),
+  %Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) ->
+  %  iolist_to_binary(S) end, iolist_to_binary("")),
+  %OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
+  %?INFO_MSG("From ~s", [From]),
+  %?INFO_MSG("To ~s", [To]),
+  %?INFO_MSG("Packet ~s", [Packet]),
+  ok.
 
-
-
-  if ((Type == <<"groupchat">>)) and (Body /= <<"">>) ->
-    Post = case Format of
-             <<"post">> -> Sep = "&",
-               ["to=", To#jid.luser, Sep, "from=", From#jid.luser, Sep, "body=", url_encode(binary_to_list(Body)), Sep, "access_token=", Token, Sep];
-             _ -> Data = [{"to", To#jid.luser}, {"from", From#jid.luser}, {"body", Body}, {"access_token", Token}],
-               mochijson2:encode({struct, Data})
-           end,
-    ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
-    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
-    ok;
-    true -> ok
-  end.
+%%if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
+%%    Post = case Format of
+%%               <<"post">> -> Sep = "&",
+%%                   ["to=", To#jid.luser, Sep,
+%%                       "from=", From#jid.luser, Sep,
+%%                       "body=", url_encode(binary_to_list(Body)), Sep,
+%%                       "access_token=", Token, Sep,
+%%                       "offline_message_count=", integer_to_list(OfflineMessageCount)];
+%%               _ -> Data = [{"to", To#jid.luser},
+%%                   {"from", From#jid.luser},
+%%                   {"body", Body},
+%%                   {"access_token", Token},
+%%                   {"offline_message_count", OfflineMessageCount}],
+%%                   mochijson2:encode({struct, Data})
+%%           end,
+%%    ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
+%%    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)},[],[]),
+%%    ok;
+%%    true -> ok
+%%end.
 
 
 %% Get number of offline messages for a user
