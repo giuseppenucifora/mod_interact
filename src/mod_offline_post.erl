@@ -61,20 +61,22 @@ stop(Host) ->
   ok.
 
 send_notice(From, To, Packet) ->
-  Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
-  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
-  Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
-    iolist_to_binary(S) end, list_to_binary("")),
-  PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) ->
-    iolist_to_binary(S) end, list_to_binary("")),
-  Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) ->
-    iolist_to_binary(S) end, iolist_to_binary("")),
-  OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
-
   ?INFO_MSG("mod_offline_post called send_notice", []),
+  %Type = xml:get_tag_attr_s(list_to_binary("type"), Packet),
+  %Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
+  %Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
+  %  iolist_to_binary(S) end, list_to_binary("")),
+  %PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) ->
+  %  iolist_to_binary(S) end, list_to_binary("")),
+  %Format = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, body_format, fun(S) ->
+  %  iolist_to_binary(S) end, iolist_to_binary("")),
+  %OfflineMessageCount = get_queue_length(To#jid.luser, To#jid.lserver),
+  ?INFO_MSG("From ~s", [From]),
+  ?INFO_MSG("To ~s", [To]),
+  ?INFO_MSG("Packet ~s", [Packet]),
   ok.
 
-%%if (Token /= "") ->
+%%if ((Type == <<"chat">>) or (Type == <<"groupchat">>)) and (Body /= <<"">>) ->
 %%    Post = case Format of
 %%               <<"post">> -> Sep = "&",
 %%                   ["to=", To#jid.luser, Sep,
