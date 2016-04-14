@@ -82,14 +82,14 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   end.
 
 
-send_notice(From, To, Packet) ->
+send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs}) ->
   ?INFO_MSG("Called send_notice", []),
   Config = receive
              {config, Result} ->
                Result
            end,
   Format = Config#config.body_format,
-  Body = xml:get_path_s(Packet, [{elem, "body"}, cdata]),
+  Body = fxml:get_attr_s(<<"body">>, Attrs),
   ?INFO_MSG("Message Body ~p~n",[Body]),
   PostUrl = Config#config.post_url,
   Token = Config#config.auth_token,
