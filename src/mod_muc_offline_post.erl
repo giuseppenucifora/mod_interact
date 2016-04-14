@@ -74,16 +74,16 @@ grab_packet(Packet, _C2SState, From, To) ->
 
 grab_notice(Packet, From, To) ->
   ?INFO_MSG("Called grab_notice", []),
-  #xmlel{name = <<"message">>, attrs = Attrs},
-
-  case fxml:get_attr_s(<<"type">>, Attrs) of
-    <<"groupchat">> -> %% mod_muc_log already does it
+  Type = xml:get_tag_attr_s("type", Packet),
+  ?INFO_MSG("Message Type ~p~n",[Type]),
+  case Type of
+    "groupchat" -> %% mod_muc_log already does it
       send_notice(From, To, Packet),
       ok;
-    <<"error">> -> %% we don't log errors
+    "error" -> %% we don't log errors
       ?DEBUG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
       ok;
-    <<"iq">> -> %% we don't log errors
+    "iq" -> %% we don't log errors
       ?DEBUG("dropping iq: ~s", [fxml:element_to_binary(Packet)]),
       ok;
     _ -> ?DEBUG("dropping all: ~s", [fxml:element_to_binary(Packet)])
@@ -97,12 +97,13 @@ send_notice(From, To, Packet) ->
                Result
            end,
   Format = Config#config.body_format,
-  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
+  Body = xml:get_path_s(Packet, [{elem, "body"}, cdata]),
+  ?INFO_MSG("Message Body ~p~n",[Body]),
   PostUrl = Config#config.post_url,
   Token = Config#config.auth_token,
   FromJid = [From#jid.luser, "@", From#jid.lserver],
   ToJid = [To#jid.luser, "@", To#jid.lserver],
-  
+
   Post = case Format of
            <<"post">> -> Sep = "&",
              ["to=", ToJid, Sep,
