@@ -51,12 +51,12 @@ start(Host, Opts) ->
 init(Host, _Opts) ->
   inets:start(),
   ssl:start(),
-  ejabberd_hooks:add(offline_message_hook, Host, ?MODULE, send_notice, 10),
+  ejabberd_hooks:add(user_send_packet, Host, ?MODULE, send_notice, 10),
   ok.
 
 stop(Host) ->
   ?INFO_MSG("Stopping mod_offline_post", []),
-  ejabberd_hooks:delete(offline_message_hook, Host,
+  ejabberd_hooks:delete(user_send_packet, Host,
     ?MODULE, send_notice, 10),
   ok.
 
