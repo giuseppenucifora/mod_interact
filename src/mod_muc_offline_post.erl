@@ -76,7 +76,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   end.
 
 
-send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs}) ->
+send_notice(From, To, Packet = #xmlel{name = <<"body">>, attrs = Attrs}) ->
   ?INFO_MSG("Called send_notice ~p~n", [Attrs]),
   Body = fxml:get_attr_s(<<"body">>, Attrs),
   ?INFO_MSG("Message Body ~p~n",[Body]),
