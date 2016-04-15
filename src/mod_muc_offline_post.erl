@@ -45,7 +45,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.6",
+  Version = "0.6.1",
   ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -88,10 +88,11 @@ send_notice(From, To, Packet) ->
     ToJid = [To#jid.luser, "@", From#jid.lserver],
     Sep = "&",
     Post = [
-      "to=", ToJid, Sep,
-      "from=", FromJid, Sep,
-      "body=", url_encode(binary_to_list(Body)), Sep,
-      "access_token=", Token],
+      "transportItem=", ToJid, Sep,
+      "userFrom=", FromJid, Sep],
+    %,
+    %"body=", url_encode(binary_to_list(Body)), Sep,
+    %"access_token=", Token
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
     httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
