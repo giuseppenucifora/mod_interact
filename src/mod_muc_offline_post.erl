@@ -66,21 +66,18 @@ grab_packet(Packet, _C2SState, From, To) ->
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-  Type = [fxml:get_attr_s(<<"type">>, Attrs)],
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Type ~s", [Type]),
-  if (Type == <<"groupchat">>) ->
-    ?INFO_MSG("getting groupchat: ", []),
-    send_notice(From, To, Packet),
-    ok
+  case fxml:get_attr_s(<<"type">>, Attrs) of
+    <<"groupchat">> -> %% mod_muc_log already does it
+      send_notice(From, To, Packet),
+      ok;
+    _ ->
+      ?INFO_MSG("dropping other", [])
   end.
 
 
 send_notice(From, To, Packet) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
   Body = fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata]),
-  ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Body ~p~n", [Body]),
   if Body /= <<"">> ->
