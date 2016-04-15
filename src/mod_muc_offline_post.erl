@@ -81,13 +81,11 @@ send_notice(From, To, Packet) ->
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Body ~p~n", [Body]),
   if Body /= <<"">> ->
-
-    Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
-      iolist_to_binary(S) end, list_to_binary("")),
-    PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) ->
-      iolist_to_binary(S) end, list_to_binary("")),
+    ?INFO_MSG("Body ~p~n", [From#jid.lserver]),
+    Token = gen_mod:get_module_opt(From#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
+    PostUrl = gen_mod:get_module_opt(From#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
     FromJid = [From#jid.luser, "@", From#jid.lserver],
-    ToJid = [To#jid.luser, "@", To#jid.lserver],
+    ToJid = [To#jid.luser, "@", From#jid.lserver],
     Sep = "&",
     Post = [
       "to=", ToJid, Sep,
