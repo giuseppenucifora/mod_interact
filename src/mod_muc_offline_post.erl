@@ -81,8 +81,10 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Children]),
-
-
+  Child = fxml:get_attr_s(<<"type">>, Children),
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("Children ~p~n", [Child]),
   %if Body /= <<"">> ->
 
     Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
