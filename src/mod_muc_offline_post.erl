@@ -45,7 +45,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.3.3",
+  Version = "0.3.5",
   ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -76,11 +76,15 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   end.
 
 
-send_notice(From, To, Packet) ->
+send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, children = Children}) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
-  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
+  ?INFO_MSG("Attrs ~p~n", [Attrs]),
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("Attrs ~p~n", [Children]),
+  Body = xml:get_path_s(Attrs, [{elem, list_to_binary("body")}, cdata]),
   ?INFO_MSG("Message Body ~p~n", [Body]),
 
   if Body /= <<"">> ->
