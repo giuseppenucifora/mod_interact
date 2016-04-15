@@ -81,14 +81,9 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Children]),
-  Children = #xmlel{name = <<"body">>, attrs = Attrs, children = Children},
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Children ~p~n", [Attrs]),
-  Body = xml:get_path_s(Attrs, [{elem, list_to_binary("body")}, cdata]),
-  ?INFO_MSG("Message Body ~p~n", [Body]),
 
-  if Body /= <<"">> ->
+
+  %if Body /= <<"">> ->
 
     Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
       iolist_to_binary(S) end, list_to_binary("")),
@@ -100,14 +95,14 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
     Post = [
       "to=", ToJid, Sep,
       "from=", FromJid, Sep,
-      "body=", url_encode(binary_to_list(Body)), Sep,
+      "body=", url_encode(binary_to_list(Children)), Sep,
       "access_token=", Token],
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
-    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
-    ok;
-    true -> ok
-  end.
+    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []).%,
+  %  ok;
+  %  true -> ok
+  %end.
 
 
 %%% The following url encoding code is from the yaws project and retains it's original license.
