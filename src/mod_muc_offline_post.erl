@@ -84,8 +84,8 @@ send_notice(From, To, Packet) ->
     ?INFO_MSG("Body ~p~n", [From#jid.lserver]),
     Token = gen_mod:get_module_opt(From#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
     PostUrl = gen_mod:get_module_opt(From#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-    FromJid = [From#jid.luser, "@", From#jid.lserver],
-    ToJid = [To#jid.luser, "@", From#jid.lserver],
+    FromJid = [From#jid.luser],
+    ToJid = [To#jid.luser],
     Sep = "&",
     Post = [
       "transportItem=", ToJid, Sep,
