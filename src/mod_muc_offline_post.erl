@@ -76,14 +76,11 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   end.
 
 
-send_notice(From, To, Packet = #xmlel{name = <<"body">>, children = Children}) ->
+send_notice(From, To, Packet) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Attrs ~p~n", [Children]),
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("------------------------------------------------------", []),
-  Body = xml:get_path_s(Children, [{elem, list_to_binary("body")}, cdata]),
+  Body = xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata]),
   ?INFO_MSG("Message Body ~p~n", [Body]),
 
   if Body /= <<"">> ->
