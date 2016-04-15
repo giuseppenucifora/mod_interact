@@ -83,8 +83,8 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
   ?INFO_MSG("Attrs ~p~n", [Attrs]),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Attrs ~p~n", [Children]),
-  Body = xml:get_path_s(Attrs, [{elem, list_to_binary("body")}, cdata]),
+  ?INFO_MSG("Children ~p~n", [Children]),
+  Body = xml:get_path_s(Children, [{elem, list_to_binary("body")}, cdata]),
   ?INFO_MSG("Message Body ~p~n", [Body]),
 
   if Body /= <<"">> ->
