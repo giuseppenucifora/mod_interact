@@ -67,9 +67,9 @@ grab_packet(Packet, _C2SState, From, To) ->
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-  ?INFO_MSG("Called grab_notice", []),
+  ?INFO_MSG("Called grab_notice type ~p~n ", [xml:get_path_s(Packet,[{attr,"type"}])]),
   case fxml:get_attr_s(<<"type">>, Attrs) of
-    <<"groupchat">> -> %% mod_muc_log already does it
+    <<"groupchat">> -> %% mod_muc_log already does it xml:get_path_s(El,[{attr,"type"}])
       send_notice(From, To, Packet),
       ok;
     _ -> ?DEBUG("dropping all: packet", [])
@@ -79,6 +79,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
 send_notice(From, To, Packet) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
   Child = xml:get_path_s(Packet,[{elem,"body"},cdata]),
+  %xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata])
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Child]),
