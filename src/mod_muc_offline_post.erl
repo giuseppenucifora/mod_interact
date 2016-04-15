@@ -73,8 +73,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   if (Type == <<"groupchat">>) ->
     ?INFO_MSG("getting groupchat: ", []),
     send_notice(From, To, Packet),
-    ok;
-    true -> ok
+    ok
   end.
 
 
