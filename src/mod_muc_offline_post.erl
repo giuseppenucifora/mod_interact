@@ -45,7 +45,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.4",
+  Version = "0.6",
   ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -67,17 +67,13 @@ grab_packet(Packet, _C2SState, From, To) ->
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-  ?INFO_MSG("Atts groupchat: ~s", [fxml:get_attr_s(<<"type">>, Attrs)]),
-  case fxml:get_attr_s(<<"type">>, Attrs) of
-    <<"groupchat">> -> %% mod_muc_log already does it
-      ?INFO_MSG("dropping groupchat: ~s", [fxml:element_to_binary(Packet)]),
-      send_notice(From, To, Packet),
-      ok;
-    <<"error">> -> %% we don't log errors
-      ?INFO_MSG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
-      ok;
-    _ ->
-      ?INFO_MSG("dropping other: ~s", [fxml:element_to_binary(Packet)])
+
+  Type = [fxml:get_attr_s(<<"type">>, Attrs)],
+  if (Type == "groupchat") ->
+    ?INFO_MSG("getting groupchat: ", []),
+    send_notice(From, To, Packet),
+    ok;
+    true -> ok
   end.
 
 
@@ -87,7 +83,7 @@ send_notice(From, To, Packet) ->
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Body ~p~n", [Body]),
-  %if Body /= <<"">> ->
+  if Body /= <<"">> ->
 
     Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
       iolist_to_binary(S) end, list_to_binary("")),
@@ -103,10 +99,10 @@ send_notice(From, To, Packet) ->
       "access_token=", Token],
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
-    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []).%,
-  %  ok;
-  %  true -> ok
-  %end.
+    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
+    ok;
+    true -> ok
+  end.
 
 
 %%% The following url encoding code is from the yaws project and retains it's original license.
