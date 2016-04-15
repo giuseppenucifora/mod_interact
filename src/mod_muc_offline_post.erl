@@ -89,7 +89,7 @@ send_notice(From, To, Packet) ->
     Sep = "&",
     Post = [
       "transportItem=", ToJid, Sep,
-      "userFrom=", FromJid, Sep],
+      "userFrom=", FromJid],
     %,
     %"body=", url_encode(binary_to_list(Body)), Sep,
     %"access_token=", Token
