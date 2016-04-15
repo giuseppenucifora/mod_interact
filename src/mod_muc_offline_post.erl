@@ -81,7 +81,7 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Children]),
-  Child = fxml:get_attr_s(<<"type">>, Children),
+  Child = fxml:get_attr_s(<<"body">>, Children),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Child]),
