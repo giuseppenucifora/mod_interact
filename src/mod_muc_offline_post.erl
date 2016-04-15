@@ -31,39 +31,116 @@
 -behaviour(gen_mod).
 
 -export([start/2,
-  stop/1]).
+  init/2,
+  stop/1,
+  grab_packet/4,
+  grab_notice/3,
+  send_notice/3,
+  mod_opt_type/1]).
 
--export([on_filter_packet/1]).
+-define(PROCNAME, ?MODULE).
 
+-include("ejabberd.hrl").
+-include("jlib.hrl").
+-include("logger.hrl").
 
-start(Host, _Opts) ->
-  ejabberd_hooks:add(filter_packet, global, ?MODULE, on_filter_packet, 0).
-
-stop(_Host) ->
-  %?DEBUG("Bye bye, ejabberd world!", []),
+start(Host, Opts) ->
+  Version = "0.3",
+  ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
+  register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
 
-on_filter_packet({From, To, XML} = Packet) ->
-  %% does something with a packet
-  %% should return modified Packet or atom `drop` to drop the packet
-  ?INFO_MSG("filtering packet :D", []),
+init(Host, _Opts) ->
+  inets:start(),
+  ssl:start(),
+  ejabberd_hooks:add(user_send_packet, Host, ?MODULE, grab_packet, 10),
+  ok.
 
-  Packet_Type = xml:get_tag_attr_s("type", XML),
+stop(Host) ->
+  ?INFO_MSG("Stopping mod_muc_offline_post", []),
+  ejabberd_hooks:delete(user_send_packet, Host, ?MODULE, grab_packet, 10),
+  ok.
 
-  case Packet_Type of
-    "message" ->
-      ?INFO_MSG("Its a message...", []);
-    _Other ->
-      ?INFO_MSG("Other kind of presence~n~p", [Packet])
-  end,
-
-  %xml:get_tag_attr_s(list_to_binary("type"),Packet),
-
-  % case Packet_Type of
-  %   "message" ->
-  %       process_received_message(Packet);
-  %   _ ->
-  %       Packet
-  % end.
-
+grab_packet(Packet, _C2SState, From, To) ->
+  ?INFO_MSG("Called grab_packet", []),
+  grab_notice(Packet, From, To),
   Packet.
+
+grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
+  ?INFO_MSG("Called grab_notice", []),
+  case fxml:get_attr_s(<<"type">>, Attrs) of
+    <<"groupchat">> -> %% mod_muc_log already does it
+      send_notice(From, To, Packet),
+      ok;
+    _ -> ?DEBUG("dropping all: packet",[])
+  end.
+
+
+send_notice(From, To, Packet) ->
+  ?INFO_MSG("Called send_notice ~p~n", [Packet]),
+  Body = "prova messaggio",
+  ?INFO_MSG("Message Body ~p~n",[Body]),
+  Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
+  PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
+  FromJid = [From#jid.luser, "@", From#jid.lserver],
+  ToJid = [To#jid.luser, "@", To#jid.lserver],
+
+  Sep = "&",
+  Post = [
+    "to=", ToJid, Sep,
+    "from=", FromJid, Sep,
+    "body=", url_encode(binary_to_list(Body)), Sep,
+    "access_token=", Token],
+  ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
+
+  httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []).
+
+
+%%% The following url encoding code is from the yaws project and retains it's original license.
+%%% https://github.com/klacke/yaws/blob/master/LICENSE
+%%% Copyright (c) 2006, Claes Wikstrom, klacke@hyber.org
+%%% All rights reserved.
+url_encode([H | T]) when is_list(H) ->
+  [url_encode(H) | url_encode(T)];
+url_encode([H | T]) ->
+  if
+    H >= $a, $z >= H ->
+      [H | url_encode(T)];
+    H >= $A, $Z >= H ->
+      [H | url_encode(T)];
+    H >= $0, $9 >= H ->
+      [H | url_encode(T)];
+    H == $_; H == $.; H == $-; H == $/; H == $: -> % FIXME: more..
+      [H | url_encode(T)];
+    true ->
+      case integer_to_hex(H) of
+        [X, Y] ->
+          [$%, X, Y | url_encode(T)];
+        [X] ->
+          [$%, $0, X | url_encode(T)]
+      end
+  end;
+
+url_encode([]) ->
+  [].
+
+integer_to_hex(I) ->
+  case catch erlang:integer_to_list(I, 16) of
+    {'EXIT', _} -> old_integer_to_hex(I);
+    Int -> Int
+  end.
+
+old_integer_to_hex(I) when I < 10 ->
+  integer_to_list(I);
+
+old_integer_to_hex(I) when I < 16 ->
+  [I - 10 + $A];
+
+old_integer_to_hex(I) when I >= 16 ->
+  N = trunc(I / 16),
+  old_integer_to_hex(N) ++ old_integer_to_hex(I rem 16).
+
+
+mod_opt_type(auth_token) -> fun(A) -> A end;
+mod_opt_type(post_url) -> fun(A) -> A end;
+mod_opt_type(_) -> [auth_token, post_url].
