@@ -45,7 +45,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.3.1",
+  Version = "0.3.2",
   ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -72,7 +72,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
     <<"groupchat">> -> %% mod_muc_log already does it
       send_notice(From, To, Packet),
       ok;
-    _ -> ?DEBUG("dropping all: packet",[])
+    _ -> ?DEBUG("dropping all: packet", [])
   end.
 
 
@@ -83,21 +83,28 @@ send_notice(From, To, Packet = #xmlel{name = <<"body">>, attrs = Attrs}) ->
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Attrs ~p~n", [Attrs]),
   Body = fxml:get_attr_s(<<"body">>, Attrs),
-  ?INFO_MSG("Message Body ~p~n",[Body]),
-  Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-  PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
-  FromJid = [From#jid.luser, "@", From#jid.lserver],
-  ToJid = [To#jid.luser, "@", To#jid.lserver],
+  ?INFO_MSG("Message Body ~p~n", [Body]),
 
-  Sep = "&",
-  Post = [
-    "to=", ToJid, Sep,
-    "from=", FromJid, Sep,
-    "body=", url_encode(binary_to_list(Body)), Sep,
-    "access_token=", Token],
-  ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
+  if Body /= <<"">> ->
 
-  httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []).
+    Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
+      iolist_to_binary(S) end, list_to_binary("")),
+    PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) ->
+      iolist_to_binary(S) end, list_to_binary("")),
+    FromJid = [From#jid.luser, "@", From#jid.lserver],
+    ToJid = [To#jid.luser, "@", To#jid.lserver],
+    Sep = "&",
+    Post = [
+      "to=", ToJid, Sep,
+      "from=", FromJid, Sep,
+      "body=", url_encode(binary_to_list(Body)), Sep,
+      "access_token=", Token],
+    ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
+
+    httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
+    ok;
+    true -> ok
+  end.
 
 
 %%% The following url encoding code is from the yaws project and retains it's original license.
