@@ -62,13 +62,14 @@ stop(Host) ->
   ok.
 
 grab_packet(Packet, _C2SState, From, To) ->
-  ?INFO_MSG("Called grab_packet", []),
   grab_notice(Packet, From, To),
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-
   Type = [fxml:get_attr_s(<<"type">>, Attrs)],
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("Type ~p~n", [Type]),
   if (Type == "groupchat") ->
     ?INFO_MSG("getting groupchat: ", []),
     send_notice(From, To, Packet),
