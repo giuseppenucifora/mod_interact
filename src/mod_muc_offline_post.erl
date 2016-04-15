@@ -45,7 +45,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.3.5",
+  Version = "0.4",
   ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -66,22 +66,26 @@ grab_packet(Packet, _C2SState, From, To) ->
   grab_notice(Packet, From, To),
   Packet.
 
-grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-  ?INFO_MSG("Called grab_notice", []),
+grab_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs}) ->
   case fxml:get_attr_s(<<"type">>, Attrs) of
     <<"groupchat">> -> %% mod_muc_log already does it
+      ?DEBUG("dropping groupchat: ~s", [fxml:element_to_binary(Packet)]),
       send_notice(From, To, Packet),
       ok;
-    _ -> ?DEBUG("dropping all: packet", [])
+    <<"error">> -> %% we don't log errors
+      ?DEBUG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
+      ok;
+    _ ->
+      ?DEBUG("dropping other: ~s", [fxml:element_to_binary(Packet)])
   end.
 
 
-send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, children = Children}) ->
+send_notice(From, To, Packet) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Children]),
-  Child = fxml:get_tag_cdata(fxml:get_tag(Packet, <<"body">>)),
+  Body = fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata]),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Child]),
@@ -97,7 +101,7 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
     Post = [
       "to=", ToJid, Sep,
       "from=", FromJid, Sep,
-      "body=", url_encode(binary_to_list(Children)), Sep,
+      "body=", url_encode(binary_to_list(Body)), Sep,
       "access_token=", Token],
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
