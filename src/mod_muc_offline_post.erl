@@ -69,7 +69,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
   Type = [fxml:get_attr_s(<<"type">>, Attrs)],
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Type ~p~n", [Type]),
+  ?INFO_MSG("Type ~s", [Type]),
   if (Type == <<"groupchat">>) ->
     ?INFO_MSG("getting groupchat: ", []),
     send_notice(From, To, Packet),
