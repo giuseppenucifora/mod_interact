@@ -81,7 +81,7 @@ send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, child
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Children]),
-  Child = fxml:get_tag_cdata(fxml:get_tag(Children, <<"body">>)),
+  Child = fxml:get_tag_cdata(fxml:get_tag(Packet, <<"body">>)),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Child]),
