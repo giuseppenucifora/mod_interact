@@ -94,7 +94,7 @@ send_notice(From, To, Packet) ->
     Post = [
       "to=", ToJid, Sep,
       "from=", FromJid, Sep,
-      "body=", url_encode(binary_to_list(Children)), Sep,
+      "body=", url_encode(binary_to_list(Child)), Sep,
       "access_token=", Token],
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
