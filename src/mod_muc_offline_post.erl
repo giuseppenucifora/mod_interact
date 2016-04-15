@@ -67,16 +67,17 @@ grab_packet(Packet, _C2SState, From, To) ->
   Packet.
 
 grab_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs}) ->
+  ?INFO_MSG("Atts groupchat: ~s", [fxml:get_attr_s(<<"type">>, Attrs)]),
   case fxml:get_attr_s(<<"type">>, Attrs) of
     <<"groupchat">> -> %% mod_muc_log already does it
-      ?DEBUG("dropping groupchat: ~s", [fxml:element_to_binary(Packet)]),
+      ?INFO_MSG("dropping groupchat: ~s", [fxml:element_to_binary(Packet)]),
       send_notice(From, To, Packet),
       ok;
     <<"error">> -> %% we don't log errors
-      ?DEBUG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
+      ?INFO_MSG("dropping error: ~s", [fxml:element_to_binary(Packet)]),
       ok;
     _ ->
-      ?DEBUG("dropping other: ~s", [fxml:element_to_binary(Packet)])
+      ?INFO_MSG("dropping other: ~s", [fxml:element_to_binary(Packet)])
   end.
 
 
