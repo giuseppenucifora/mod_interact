@@ -45,7 +45,7 @@
 -include("logger.hrl").
 
 start(Host, Opts) ->
-  Version = "0.3.6",
+  Version = "0.3.5",
   ?INFO_MSG("Starting mod_muc_offline_post v.~s", [Version]),
   register(?PROCNAME, spawn(?MODULE, init, [Host, Opts])),
   ok.
@@ -67,19 +67,21 @@ grab_packet(Packet, _C2SState, From, To) ->
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-  ?INFO_MSG("Called grab_notice type ~p~n ", [xml:get_path_s(Packet,[{attr,"type"}])]),
+  ?INFO_MSG("Called grab_notice", []),
   case fxml:get_attr_s(<<"type">>, Attrs) of
-    <<"groupchat">> -> %% mod_muc_log already does it xml:get_path_s(El,[{attr,"type"}])
+    <<"groupchat">> -> %% mod_muc_log already does it
       send_notice(From, To, Packet),
       ok;
     _ -> ?DEBUG("dropping all: packet", [])
   end.
 
 
-send_notice(From, To, Packet) ->
+send_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs, children = Children}) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
-  Child = xml:get_path_s(Packet,[{elem,"body"},cdata]),
-  %xml:get_path_s(Packet, [{elem, list_to_binary("body")}, cdata])
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("------------------------------------------------------", []),
+  ?INFO_MSG("Children ~p~n", [Children]),
+  Child = fxml:get_tag_cdata(fxml:get_tag(Children, <<"body">>)),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("Children ~p~n", [Child]),
@@ -95,7 +97,7 @@ send_notice(From, To, Packet) ->
     Post = [
       "to=", ToJid, Sep,
       "from=", FromJid, Sep,
-      "body=", url_encode(binary_to_list(Child)), Sep,
+      "body=", url_encode(binary_to_list(Children)), Sep,
       "access_token=", Token],
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
