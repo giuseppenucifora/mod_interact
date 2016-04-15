@@ -78,7 +78,7 @@ grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
 
 send_notice(From, To, Packet = #xmlel{name = <<"body">>, attrs = Attrs}) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
-  Body = fxml:get_attr_s(<<"body">>, Attrs),
+  Body = "prova messaggio",
   ?INFO_MSG("Message Body ~p~n",[Body]),
   Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
   PostUrl = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, post_url, fun(S) -> iolist_to_binary(S) end, list_to_binary("")),
