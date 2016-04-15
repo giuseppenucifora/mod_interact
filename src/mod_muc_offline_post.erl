@@ -82,13 +82,10 @@ grab_notice(From, To, Packet = #xmlel{name = <<"message">>, attrs = Attrs}) ->
 
 send_notice(From, To, Packet) ->
   ?INFO_MSG("Called send_notice ~p~n", [Packet]),
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Children ~p~n", [Children]),
   Body = fxml:get_path_s(Packet, [{elem, <<"body">>}, cdata]),
   ?INFO_MSG("------------------------------------------------------", []),
   ?INFO_MSG("------------------------------------------------------", []),
-  ?INFO_MSG("Children ~p~n", [Child]),
+  ?INFO_MSG("Body ~p~n", [Body]),
   %if Body /= <<"">> ->
 
     Token = gen_mod:get_module_opt(To#jid.lserver, ?MODULE, auth_token, fun(S) ->
