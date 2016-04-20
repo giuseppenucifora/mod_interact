@@ -62,11 +62,13 @@ stop(Host) ->
   ok.
 
 grab_packet(Packet, _C2SState, From, To) ->
+  ?INFO_MSG("Called grab_packet ~p~n", [Packet]),
   grab_notice(Packet, From, To),
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
-  ?INFO_MSG("Called send_notice ~p~n", [Attrs]),
+  Attr = fxml:get_attr_s(<<"type">>, Attrs),
+  ?INFO_MSG("Called grab_notice attr ~p~n", [Attr]),
   case fxml:get_attr_s(<<"type">>, Attrs) of
     <<"groupchat">> -> %% mod_muc_log already does it
       send_notice(From, To, Packet),
@@ -91,9 +93,8 @@ send_notice(From, To, Packet) ->
     Post = [
       "transportItem=", ToJid, Sep,
       "userFrom=", FromJid],
-    %,
-    %"body=", url_encode(binary_to_list(Body)), Sep,
-    %"access_token=", Token
+      "body=", url_encode(binary_to_list(Body)), Sep,
+      "access_token=", Token
     ?INFO_MSG("Sending post request to ~s with body \"~s\"", [PostUrl, Post]),
 
     httpc:request(post, {binary_to_list(PostUrl), [], "application/x-www-form-urlencoded", list_to_binary(Post)}, [], []),
