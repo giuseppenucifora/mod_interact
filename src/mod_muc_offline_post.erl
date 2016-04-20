@@ -63,7 +63,7 @@ stop(Host) ->
 
 grab_packet(Packet, _C2SState, From, To) ->
   ?INFO_MSG("Called grab_packet ~p~n", [Packet]),
-  grab_notice(Packet, From, To),
+  %grab_notice(Packet, From, To),
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
