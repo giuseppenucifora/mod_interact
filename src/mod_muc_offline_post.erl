@@ -66,6 +66,7 @@ grab_packet(Packet, _C2SState, From, To) ->
   Packet.
 
 grab_notice(Packet = #xmlel{name = <<"message">>, attrs = Attrs}, From, To) ->
+  ?INFO_MSG("Called send_notice ~p~n", [Attrs]),
   case fxml:get_attr_s(<<"type">>, Attrs) of
     <<"groupchat">> -> %% mod_muc_log already does it
       send_notice(From, To, Packet),
